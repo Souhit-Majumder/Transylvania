@@ -1,0 +1,47 @@
+# Maven
+target/
+pom.xml.tag
+pom.xml.releaseBackup
+pom.xml.versionsBackup
+pom.xml.next
+release.properties
+dependency-reduced-pom.xml
+buildNumber.properties
+.mvn/timing.properties
+.mvn/wrapper/maven-wrapper.jar
+
+# VS Code
+.vscode/
+
+# IntelliJ IDEA
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Eclipse
+.project
+.classpath
+.settings/
+.metadata/
+
+# Database files
+hotel.db
+hotel.db-journal
+*.sqlite
+*.db
+
+# Temporary & Log files
+*.log
+~$*.doc
+~$*.docx
+*.bak
+
+# Compiled class files
+*.class
+
+# macOS
+.DS_Store
+
+# Windows
+Thumbs.db
