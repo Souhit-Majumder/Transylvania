@@ -38,6 +38,7 @@ public class DialogHelper {
     /**
      * Creates a pre-styled GridPane for use inside dialogs.
      */
+    @SuppressWarnings("exports")
     public static GridPane createFormGrid() {
         GridPane grid = new GridPane();
         grid.getStyleClass().add("dialog-form-grid");

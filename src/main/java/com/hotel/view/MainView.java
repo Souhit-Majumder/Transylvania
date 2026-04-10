@@ -28,11 +28,11 @@ public class MainView {
         brandRow.setAlignment(Pos.CENTER_LEFT);
         StackPane brandIcon = new StackPane();
         brandIcon.getStyleClass().add("sidebar-brand-icon");
-        Label brandLetter = new Label("L'H");
+        Label brandLetter = new Label("🕸️");
         brandIcon.getChildren().add(brandLetter);
 
         VBox brandText = new VBox(2);
-        Label brandTitle = new Label("L'Horizon");
+        Label brandTitle = new Label("Transylvania");
         brandTitle.getStyleClass().add("sidebar-title");
         Label brandSub = new Label("MANAGEMENT SUITE");
         brandSub.getStyleClass().add("sidebar-subtitle");

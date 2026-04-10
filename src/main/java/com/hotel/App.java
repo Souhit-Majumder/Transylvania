@@ -21,7 +21,7 @@ public class App extends Application {
         LoginView login = new LoginView();
         Scene scene = new Scene(login.getView(), 460, 520);
         applyCss(scene);
-        primaryStage.setTitle("L'Horizon — Management Suite");
+        primaryStage.setTitle("Transylvania — Management Suite");
         primaryStage.setScene(scene);
         primaryStage.setResizable(false);
         primaryStage.show();
@@ -31,7 +31,7 @@ public class App extends Application {
         MainView main = new MainView();
         Scene scene = new Scene(main.getView(), 1340, 820);
         applyCss(scene);
-        primaryStage.setTitle("L'Horizon — Management Suite");
+        primaryStage.setTitle("Transylvania — Management Suite");
         primaryStage.setScene(scene);
         primaryStage.setResizable(true);
         primaryStage.centerOnScreen();

@@ -6,6 +6,7 @@ public class DatabaseManager {
     private static final String DB_URL = "jdbc:sqlite:hotel.db";
     private static Connection connection;
 
+    @SuppressWarnings("exports")
     public static Connection getConnection() throws SQLException {
         if (connection == null || connection.isClosed()) {
             connection = DriverManager.getConnection(DB_URL);

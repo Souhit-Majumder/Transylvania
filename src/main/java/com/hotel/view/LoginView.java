@@ -24,11 +24,11 @@ public class LoginView {
         // Brand icon
         StackPane brandIcon = new StackPane();
         brandIcon.getStyleClass().add("login-brand-icon");
-        Label brandLetter = new Label("L'H");
+        Label brandLetter = new Label("Transylvania");
         brandIcon.getChildren().add(brandLetter);
         VBox.setMargin(brandIcon, new Insets(0, 0, 8, 0));
 
-        Label title = new Label("L'Horizon");
+        Label title = new Label("Hotel Transylvania");
         title.getStyleClass().add("login-title");
 
         Label subtitle = new Label("Management Suite — Staff Login");

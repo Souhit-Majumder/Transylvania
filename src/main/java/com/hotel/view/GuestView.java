@@ -55,6 +55,11 @@ public class GuestView {
 
         table = new TableView<>();
         VBox.setVgrow(table, Priority.ALWAYS);
+
+        table.setMaxWidth(Double.MAX_VALUE);
+        table.setMaxHeight(Double.MAX_VALUE);
+        table.setColumnResizePolicy(TableView.CONSTRAINED_RESIZE_POLICY);
+        
         setupColumns();
         loadData();
 

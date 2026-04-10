@@ -204,6 +204,7 @@ public class DashboardView {
         }
 
         Button viewQueueBtn = new Button("View Full Queue");
+        viewQueueBtn.setOnAction(null);
         viewQueueBtn.getStyleClass().addAll("btn-outline", "btn-small");
         viewQueueBtn.setMaxWidth(Double.MAX_VALUE);
         VBox.setMargin(viewQueueBtn, new Insets(12, 0, 0, 0));
