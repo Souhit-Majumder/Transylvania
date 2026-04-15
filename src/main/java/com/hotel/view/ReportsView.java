@@ -151,7 +151,6 @@ public class ReportsView {
         barCard.getChildren().add(revenueChart);
 
         // ── Assemble into scroll ───────────────────────────────────
-        VBox headerText = (VBox) root.getChildren().get(0); // preserve existing header
         ScrollPane scroll = new ScrollPane(new VBox(20, statsRow, chartsRow, barCard));
         scroll.getStyleClass().add("content-scroll");
         scroll.setFitToWidth(true);
