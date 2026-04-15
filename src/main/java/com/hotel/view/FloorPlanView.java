@@ -197,23 +197,27 @@ public class FloorPlanView {
     }
 
     private void autoCreateHousekeepingTask(Room room, String newStatus) {
-        if (!newStatus.equals("NEEDS_CLEANING") && !newStatus.equals("MAINTENANCE")) return;
+        if (newStatus.equals("NEEDS_CLEANING") || newStatus.equals("MAINTENANCE")) {
+            // Room needs attention → create a new pending task
+            HousekeepingTask task = new HousekeepingTask();
+            task.setRoomId(room.getId());
+            task.setStatus("PENDING");
+            if (newStatus.equals("NEEDS_CLEANING")) {
+                task.setTaskType("CLEANING");
+                task.setPriority("HIGH");
+                task.setNotes("Room marked for cleaning from floor plan.");
+            } else {
+                task.setTaskType("MAINTENANCE");
+                task.setPriority("URGENT");
+                task.setNotes("Room flagged for maintenance from floor plan.");
+            }
+            hkDAO.save(task);
 
-        HousekeepingTask task = new HousekeepingTask();
-        task.setRoomId(room.getId());
-        task.setStatus("PENDING");
-
-        if (newStatus.equals("NEEDS_CLEANING")) {
-            task.setTaskType("CLEANING");
-            task.setPriority("HIGH");
-            task.setNotes("Room marked for cleaning from floor plan.");
-        } else {
-            task.setTaskType("MAINTENANCE");
-            task.setPriority("URGENT");
-            task.setNotes("Room flagged for maintenance from floor plan.");
+        } else if (newStatus.equals("AVAILABLE") || newStatus.equals("OCCUPIED")
+                || newStatus.equals("RESERVED")) {
+            // Room is being cleared → complete any active tasks so the queue stays in sync
+            hkDAO.markCompleteByRoom(room.getId());
         }
-
-        hkDAO.save(task);
     }
 
     @SuppressWarnings("exports")

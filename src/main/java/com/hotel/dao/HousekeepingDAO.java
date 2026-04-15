@@ -59,6 +59,19 @@ public class HousekeepingDAO {
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
+    /**
+     * Marks all PENDING or IN_PROGRESS tasks for a specific room as COMPLETED.
+     * Called when a room's status is manually cleared (e.g. NEEDS_CLEANING → AVAILABLE)
+     * so the housekeeping queue stays in sync with the floor plan.
+     */
+    public void markCompleteByRoom(int roomId) {
+        try (PreparedStatement ps = DatabaseManager.getConnection().prepareStatement(
+                "UPDATE housekeeping SET status='COMPLETED', completed_at=datetime('now') " +
+                "WHERE room_id=? AND status IN ('PENDING','IN_PROGRESS')")) {
+            ps.setInt(1, roomId); ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
     private HousekeepingTask mapRow(ResultSet rs) throws SQLException {
         HousekeepingTask t = new HousekeepingTask();
         t.setId(rs.getInt("id")); t.setRoomId(rs.getInt("room_id"));
