@@ -138,6 +138,17 @@ public class DatabaseManager {
                 )""");
 
             stmt.executeUpdate("""
+                CREATE TABLE IF NOT EXISTS staff (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    name TEXT NOT NULL,
+                    role TEXT DEFAULT 'HOUSEKEEPER'
+                        CHECK(role IN ('HOUSEKEEPER','MAINTENANCE','SUPERVISOR','INSPECTOR')),
+                    phone TEXT,
+                    active INTEGER DEFAULT 1,
+                    created_at TEXT DEFAULT (datetime('now'))
+                )""");
+
+            stmt.executeUpdate("""
                 CREATE TABLE IF NOT EXISTS activity_log (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     user_id INTEGER,

@@ -47,6 +47,23 @@ public class POSChargeDAO {
         } catch (SQLException e) { e.printStackTrace(); }
     }
 
+    public void update(POSCharge c) {
+        try (PreparedStatement ps = DatabaseManager.getConnection().prepareStatement(
+                "UPDATE pos_charges SET category=?, description=?, amount=?, quantity=? WHERE id=?")) {
+            ps.setString(1, c.getCategory()); ps.setString(2, c.getDescription());
+            ps.setDouble(3, c.getAmount()); ps.setInt(4, c.getQuantity());
+            ps.setInt(5, c.getId());
+            ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
+    public void delete(int id) {
+        try (PreparedStatement ps = DatabaseManager.getConnection().prepareStatement(
+                "DELETE FROM pos_charges WHERE id=?")) {
+            ps.setInt(1, id); ps.executeUpdate();
+        } catch (SQLException e) { e.printStackTrace(); }
+    }
+
     public double getTotalByReservation(int reservationId) {
         try (PreparedStatement ps = DatabaseManager.getConnection().prepareStatement(
                 "SELECT COALESCE(SUM(amount * quantity), 0) FROM pos_charges WHERE reservation_id=?")) {

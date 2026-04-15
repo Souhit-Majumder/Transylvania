@@ -3,6 +3,7 @@ package com.hotel.view;
 import com.hotel.dao.*;
 import com.hotel.model.*;
 import com.hotel.util.DialogHelper;
+import com.hotel.dao.StaffDAO;
 import javafx.beans.property.SimpleStringProperty;
 import javafx.collections.FXCollections;
 import javafx.geometry.Insets;
@@ -16,6 +17,7 @@ public class HousekeepingView {
     private final TableView<HousekeepingTask> table;
     private final HousekeepingDAO dao = new HousekeepingDAO();
     private final RoomDAO roomDAO = new RoomDAO();
+    private final StaffDAO staffDAO = new StaffDAO();
 
     public HousekeepingView() {
         root = new VBox(20);
@@ -68,9 +70,14 @@ public class HousekeepingView {
         refreshBtn.setOnAction(e -> loadPending());
 
         ContextMenu ctx = new ContextMenu();
+        MenuItem editItem = new MenuItem("Edit Task");
         MenuItem startItem = new MenuItem("Start (In Progress)");
         MenuItem completeItem = new MenuItem("Mark Complete");
         MenuItem makeAvailable = new MenuItem("Complete & Set Room Available");
+        editItem.setOnAction(e -> {
+            HousekeepingTask t = table.getSelectionModel().getSelectedItem();
+            if (t != null) showEditTaskDialog(t);
+        });
         startItem.setOnAction(e -> {
             HousekeepingTask t = table.getSelectionModel().getSelectedItem();
             if (t != null) { t.setStatus("IN_PROGRESS"); dao.save(t); loadPending(); }
@@ -83,7 +90,7 @@ public class HousekeepingView {
             HousekeepingTask t = table.getSelectionModel().getSelectedItem();
             if (t != null) { dao.markComplete(t.getId()); roomDAO.updateStatus(t.getRoomId(), "AVAILABLE"); loadPending(); }
         });
-        ctx.getItems().addAll(startItem, completeItem, new SeparatorMenuItem(), makeAvailable);
+        ctx.getItems().addAll(editItem, new SeparatorMenuItem(), startItem, completeItem, new SeparatorMenuItem(), makeAvailable);
         table.setContextMenu(ctx);
 
         root.getChildren().addAll(header, toolbar, table);
@@ -127,15 +134,21 @@ public class HousekeepingView {
         typeBox.setValue("CLEANING");
         ComboBox<String> priorityBox = new ComboBox<>(FXCollections.observableArrayList("LOW", "NORMAL", "HIGH", "URGENT"));
         priorityBox.setValue("NORMAL");
-        TextField assignField = new TextField();
-        assignField.setPromptText("Staff name");
+
+        // Assignee from active staff list; editable to allow free-text fallback
+        List<com.hotel.model.Staff> staffList = staffDAO.findActive();
+        ComboBox<String> assignBox = new ComboBox<>();
+        assignBox.setEditable(true);
+        for (com.hotel.model.Staff s : staffList) assignBox.getItems().add(s.getName());
+        assignBox.setPromptText("Select or type staff name");
+
         TextArea notesArea = new TextArea();
         notesArea.setPrefRowCount(2);
 
         grid.addRow(0, new Label("Room:"), roomBox);
         grid.addRow(1, new Label("Task Type:"), typeBox);
         grid.addRow(2, new Label("Priority:"), priorityBox);
-        grid.addRow(3, new Label("Assign To:"), assignField);
+        grid.addRow(3, new Label("Assign To:"), assignBox);
         grid.addRow(4, new Label("Notes:"), notesArea);
 
         dialog.getDialogPane().setContent(grid);
@@ -146,13 +159,68 @@ public class HousekeepingView {
                 HousekeepingTask t = new HousekeepingTask();
                 t.setRoomId(rooms.get(roomBox.getSelectionModel().getSelectedIndex()).getId());
                 t.setTaskType(typeBox.getValue()); t.setPriority(priorityBox.getValue());
-                t.setAssignedTo(assignField.getText().trim()); t.setStatus("PENDING");
+                t.setAssignedTo(assignBox.getValue()); t.setStatus("PENDING");
                 t.setNotes(notesArea.getText());
                 return t;
             }
             return null;
         });
         dialog.showAndWait().ifPresent(t -> { dao.save(t); loadPending(); });
+    }
+
+    private void showEditTaskDialog(HousekeepingTask t) {
+        Dialog<HousekeepingTask> dialog = new Dialog<>();
+        dialog.setTitle("Edit Task — Room " + t.getRoomNumber());
+        GridPane grid = DialogHelper.createFormGrid();
+
+        // Assignee: dropdown from active staff, plus a free-text fallback
+        List<com.hotel.model.Staff> staffList = staffDAO.findActive();
+        ComboBox<String> assignBox = new ComboBox<>();
+        assignBox.setEditable(true); // allow free text if staff list is empty
+        for (com.hotel.model.Staff s : staffList) assignBox.getItems().add(s.getName());
+        assignBox.setValue(t.getAssignedTo());
+        assignBox.setPromptText("Select or type staff name");
+
+        ComboBox<String> typeBox = new ComboBox<>(FXCollections.observableArrayList(
+            "CLEANING", "MAINTENANCE", "INSPECTION", "DEEP_CLEAN"));
+        typeBox.setValue(t.getTaskType());
+
+        ComboBox<String> priorityBox = new ComboBox<>(FXCollections.observableArrayList(
+            "LOW", "NORMAL", "HIGH", "URGENT"));
+        priorityBox.setValue(t.getPriority());
+
+        ComboBox<String> statusBox = new ComboBox<>(FXCollections.observableArrayList(
+            "PENDING", "IN_PROGRESS", "COMPLETED"));
+        statusBox.setValue(t.getStatus());
+
+        TextArea notesArea = new TextArea(t.getNotes() != null ? t.getNotes() : "");
+        notesArea.setPrefRowCount(3);
+
+        grid.addRow(0, new Label("Assigned To:"), assignBox);
+        grid.addRow(1, new Label("Task Type:"), typeBox);
+        grid.addRow(2, new Label("Priority:"), priorityBox);
+        grid.addRow(3, new Label("Status:"), statusBox);
+        grid.addRow(4, new Label("Notes:"), notesArea);
+
+        dialog.getDialogPane().setContent(grid);
+        dialog.getDialogPane().getButtonTypes().addAll(ButtonType.OK, ButtonType.CANCEL);
+        DialogHelper.style(dialog);
+
+        dialog.setResultConverter(bt -> {
+            if (bt == ButtonType.OK) {
+                t.setAssignedTo(assignBox.getValue());
+                t.setTaskType(typeBox.getValue());
+                t.setPriority(priorityBox.getValue());
+                t.setStatus(statusBox.getValue());
+                t.setNotes(notesArea.getText());
+                if ("COMPLETED".equals(t.getStatus()) && t.getCompletedAt() == null) {
+                    t.setCompletedAt(java.time.LocalDateTime.now().toString());
+                }
+                return t;
+            }
+            return null;
+        });
+        dialog.showAndWait().ifPresent(task -> { dao.save(task); loadPending(); });
     }
 
     @SuppressWarnings("exports")

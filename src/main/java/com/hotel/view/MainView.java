@@ -67,6 +67,7 @@ public class MainView {
             {"Billing",        "receipt_long",     "BILLING"},
             {"POS Charges",    "point_of_sale",    "POS"},
             {"Housekeeping",   "cleaning_services","HOUSEKEEPING"},
+            {"House Staff",    "badge",            "STAFF"},
             {"Analytics",      "analytics",        "REPORTS"},
         };
         for (String[] item : menuItems) {
@@ -135,7 +136,7 @@ public class MainView {
 
         contentArea.getChildren().clear();
         switch (target) {
-            case "DASHBOARD"    -> contentArea.getChildren().add(new DashboardView().getView());
+            case "DASHBOARD"    -> contentArea.getChildren().add(new DashboardView(this::navigate).getView());
             case "RESERVATIONS" -> contentArea.getChildren().add(new ReservationView().getView());
             case "ROOMS"        -> contentArea.getChildren().add(new RoomView().getView());
             case "FLOORPLAN"    -> contentArea.getChildren().add(new FloorPlanView().getView());
@@ -143,6 +144,7 @@ public class MainView {
             case "BILLING"      -> contentArea.getChildren().add(new BillingView().getView());
             case "POS"          -> contentArea.getChildren().add(new POSView().getView());
             case "HOUSEKEEPING" -> contentArea.getChildren().add(new HousekeepingView().getView());
+            case "STAFF"        -> contentArea.getChildren().add(new StaffView().getView());
             case "REPORTS"      -> contentArea.getChildren().add(new ReportsView().getView());
             case "USERS"        -> contentArea.getChildren().add(new UserManagementView().getView());
             case "BACKUP"       -> contentArea.getChildren().add(new BackupView().getView());
@@ -159,6 +161,7 @@ public class MainView {
             case "Billing" -> "BILLING";
             case "POS Charges" -> "POS";
             case "Housekeeping" -> "HOUSEKEEPING";
+            case "House Staff" -> "STAFF";
             case "Analytics" -> "REPORTS";
             case "User Mgmt" -> "USERS";
             case "DB Backup" -> "BACKUP";

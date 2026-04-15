@@ -10,11 +10,12 @@ import javafx.scene.layout.*;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.function.Consumer;
 
 public class DashboardView {
     private final VBox root;
 
-    public DashboardView() {
+    public DashboardView(Consumer<String> navigator) {
         root = new VBox(24);
         root.setPadding(new Insets(32));
 
@@ -174,6 +175,7 @@ public class DashboardView {
             HBox taskRow = new HBox(14);
             taskRow.getStyleClass().add("task-row");
             taskRow.setAlignment(Pos.CENTER_LEFT);
+            taskRow.setStyle("-fx-cursor: hand;");
 
             StackPane taskIcon = new StackPane();
             taskIcon.getStyleClass().add("task-icon");
@@ -193,6 +195,8 @@ public class DashboardView {
             chevron.setStyle("-fx-font-size: 18; -fx-text-fill: #cbd5e1;");
 
             taskRow.getChildren().addAll(taskIcon, taskInfo, chevron);
+            // Click a task row → open Floor Plan
+            taskRow.setOnMouseClicked(e -> navigator.accept("FLOORPLAN"));
             rightCol.getChildren().add(taskRow);
         }
 
@@ -204,7 +208,7 @@ public class DashboardView {
         }
 
         Button viewQueueBtn = new Button("View Full Queue");
-        viewQueueBtn.setOnAction(null);
+        viewQueueBtn.setOnAction(e -> navigator.accept("HOUSEKEEPING"));
         viewQueueBtn.getStyleClass().addAll("btn-outline", "btn-small");
         viewQueueBtn.setMaxWidth(Double.MAX_VALUE);
         VBox.setMargin(viewQueueBtn, new Insets(12, 0, 0, 0));

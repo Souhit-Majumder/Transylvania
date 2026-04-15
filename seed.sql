@@ -8,9 +8,10 @@ DELETE FROM activity_log;
 DELETE FROM reservations;
 DELETE FROM guests;
 DELETE FROM rooms;
+DELETE FROM staff;
 
 -- Reset the Auto-Increment counters so IDs start at 1 again
-DELETE FROM sqlite_sequence WHERE name IN ('invoice_items', 'invoices', 'pos_charges', 'housekeeping', 'activity_log', 'reservations', 'guests', 'rooms');
+DELETE FROM sqlite_sequence WHERE name IN ('invoice_items', 'invoices', 'pos_charges', 'housekeeping', 'activity_log', 'reservations', 'guests', 'rooms', 'staff');
 
 -- ==========================================
 -- 2. INSERT 25 ROOMS (5 Floors, 5 Types)
@@ -68,7 +69,15 @@ INSERT INTO guests (first_name, last_name, email, phone, id_type, id_number, cit
 ('Liam', 'O''Connor', 'liam@example.ie', '+353-87-1234567', 'PASSPORT', 'IE556677', 'Dublin', 'Ireland', 0);
 
 -- ==========================================
--- 4. INSERT RESERVATIONS (Strictly linked to Room Status)
+-- 4. INSERT HOUSE STAFF
+-- ==========================================
+INSERT INTO staff (name, role, phone, active) VALUES
+('Maria', 'HOUSEKEEPER', '+1-555-0201', 1),
+('David', 'MAINTENANCE', '+1-555-0202', 1);
+
+
+-- ==========================================
+-- 5. INSERT RESERVATIONS (Strictly linked to Room Status)
 -- ==========================================
 -- Res 1: Matches Room 101 (OCCUPIED)
 INSERT INTO reservations (guest_id, room_id, check_in_date, check_out_date, actual_check_in, status, adults) VALUES 
@@ -91,7 +100,7 @@ INSERT INTO reservations (guest_id, room_id, check_in_date, check_out_date, stat
 (5, 5, '2026-04-01', '2026-04-03', 'CANCELLED', 1);
 
 -- ==========================================
--- 5. INSERT POS CHARGES
+-- 6. INSERT POS CHARGES
 -- ==========================================
 -- Charges for active guest in Room 101
 INSERT INTO pos_charges (reservation_id, category, description, amount, quantity) VALUES 
@@ -104,7 +113,7 @@ INSERT INTO pos_charges (reservation_id, category, description, amount, quantity
 (4, 'LAUNDRY', 'Dry Cleaning', 30.00, 1);
 
 -- ==========================================
--- 6. INSERT HOUSEKEEPING TASKS
+-- 7. INSERT HOUSEKEEPING TASKS
 -- ==========================================
 -- Task for Room 404 (NEEDS_CLEANING)
 INSERT INTO housekeeping (room_id, assigned_to, task_type, priority, status, notes) VALUES 
@@ -115,7 +124,7 @@ INSERT INTO housekeeping (room_id, assigned_to, task_type, priority, status, not
 (25, 'David', 'MAINTENANCE', 'URGENT', 'IN_PROGRESS', 'AC unit leaking water onto carpet');
 
 -- ==========================================
--- 7. GENERATE INVOICE (For the Checked-Out Guest)
+-- 8. GENERATE INVOICE (For the Checked-Out Guest)
 -- ==========================================
 -- Guest in Room 404 (Suite, $300/night for 4 nights = $1200 + $45 in POS charges)
 INSERT INTO invoices (reservation_id, subtotal, tax_rate, tax_amount, total, payment_status, payment_method, paid_amount) VALUES 

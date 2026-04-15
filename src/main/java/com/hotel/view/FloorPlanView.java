@@ -1,6 +1,8 @@
 package com.hotel.view;
 
+import com.hotel.dao.HousekeepingDAO;
 import com.hotel.dao.RoomDAO;
+import com.hotel.model.HousekeepingTask;
 import com.hotel.model.Room;
 import com.hotel.util.DialogHelper;
 import javafx.geometry.Insets;
@@ -12,6 +14,8 @@ import java.util.*;
 public class FloorPlanView {
     private final VBox root;
     private final RoomDAO dao = new RoomDAO();
+    private final HousekeepingDAO hkDAO = new HousekeepingDAO();
+    private Runnable buildPlan;
 
     public FloorPlanView() {
         root = new VBox(20);
@@ -55,21 +59,15 @@ public class FloorPlanView {
         VBox floorsContainer = new VBox(28);
         floorsContainer.setPadding(new Insets(12));
 
-        Runnable buildPlan = () -> {
+        buildPlan = () -> {
             floorsContainer.getChildren().clear();
             floorSelector.getChildren().clear();
             List<Room> rooms = dao.findAll();
             Map<Integer, List<Room>> byFloor = new TreeMap<>();
             for (Room r : rooms) byFloor.computeIfAbsent(r.getFloor(), k -> new ArrayList<>()).add(r);
 
-            boolean first = true;
-            for (var entry : byFloor.entrySet()) {
-                Button floorBtn = new Button("Floor " + entry.getKey());
-                floorBtn.getStyleClass().add(first ? "segment-btn-active" : "segment-btn");
-                floorSelector.getChildren().add(floorBtn);
-                first = false;
-            }
-
+            // Build floor sections first so buttons can reference them
+            Map<Integer, VBox> floorSections = new java.util.LinkedHashMap<>();
             for (var entry : byFloor.entrySet()) {
                 VBox floorSection = new VBox(12);
                 floorSection.getStyleClass().add("card");
@@ -95,11 +93,41 @@ public class FloorPlanView {
                         "\nMax Occupancy: " + room.getMaxOccupancy());
                     Tooltip.install(roomBtn, tip);
 
-                    roomBtn.setOnAction(e -> showRoomDetails(room));
+                    roomBtn.setOnAction(e -> showRoomDetails(room, buildPlan));
                     roomsPane.getChildren().add(roomBtn);
                 }
                 floorSection.getChildren().addAll(floorLabel, roomsPane);
                 floorsContainer.getChildren().add(floorSection);
+                floorSections.put(entry.getKey(), floorSection);
+            }
+
+            // Floor selector buttons: toggle active style + scroll to section
+            boolean first = true;
+            for (var entry : byFloor.entrySet()) {
+                final int floorNum = entry.getKey();
+                Button floorBtn = new Button("Floor " + floorNum);
+                floorBtn.getStyleClass().add(first ? "segment-btn-active" : "segment-btn");
+                floorBtn.setOnAction(e -> {
+                    // Toggle highlight
+                    for (var node : floorSelector.getChildren()) {
+                        if (node instanceof Button b) {
+                            b.getStyleClass().setAll(
+                                b.getText().equals("Floor " + floorNum)
+                                    ? "segment-btn-active" : "segment-btn");
+                        }
+                    }
+                    // Scroll to the target floor section
+                    VBox section = floorSections.get(floorNum);
+                    if (section != null) {
+                        double contentH  = floorsContainer.getBoundsInLocal().getHeight();
+                        double viewportH = scroll.getViewportBounds().getHeight();
+                        double scrollable = contentH - viewportH;
+                        double sectionY  = section.getBoundsInParent().getMinY();
+                        if (scrollable > 0) scroll.setVvalue(sectionY / scrollable);
+                    }
+                });
+                floorSelector.getChildren().add(floorBtn);
+                first = false;
             }
         };
 
@@ -139,7 +167,7 @@ public class FloorPlanView {
         };
     }
 
-    private void showRoomDetails(Room room) {
+    private void showRoomDetails(Room room, Runnable refresh) {
         Alert alert = new Alert(Alert.AlertType.INFORMATION);
         alert.setTitle("Room " + room.getRoomNumber());
         alert.setHeaderText(room.getType() + " — " + room.getStatus());
@@ -159,9 +187,33 @@ public class FloorPlanView {
                     "AVAILABLE", "OCCUPIED", "RESERVED", "MAINTENANCE", "NEEDS_CLEANING");
                 dlg.setTitle("Change Status");
                 DialogHelper.style(dlg);
-                dlg.showAndWait().ifPresent(s -> dao.updateStatus(room.getId(), s));
+                dlg.showAndWait().ifPresent(s -> {
+                    dao.updateStatus(room.getId(), s);
+                    autoCreateHousekeepingTask(room, s);
+                    refresh.run();
+                });
             }
         });
+    }
+
+    private void autoCreateHousekeepingTask(Room room, String newStatus) {
+        if (!newStatus.equals("NEEDS_CLEANING") && !newStatus.equals("MAINTENANCE")) return;
+
+        HousekeepingTask task = new HousekeepingTask();
+        task.setRoomId(room.getId());
+        task.setStatus("PENDING");
+
+        if (newStatus.equals("NEEDS_CLEANING")) {
+            task.setTaskType("CLEANING");
+            task.setPriority("HIGH");
+            task.setNotes("Room marked for cleaning from floor plan.");
+        } else {
+            task.setTaskType("MAINTENANCE");
+            task.setPriority("URGENT");
+            task.setNotes("Room flagged for maintenance from floor plan.");
+        }
+
+        hkDAO.save(task);
     }
 
     @SuppressWarnings("exports")
